@@ -10,7 +10,7 @@
         </AssemblyAttribute>
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="Config.fs" />
+        <Compile Include="Types.fs" />
         <Compile Include="Parser.fs" />
     </ItemGroup>
 

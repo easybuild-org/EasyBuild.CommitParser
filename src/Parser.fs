@@ -1,7 +1,7 @@
-namespace CommitLinter
+namespace EasyBuild.CommitParser
 
 open FsToolkit.ErrorHandling
-open CommitLinter.Config
+open EasyBuild.CommitParser.Types
 open System.Text.RegularExpressions
 open System
 
@@ -31,14 +31,6 @@ This is the body of the commit message
 This is the footer of the commit message
 -------------------------"
 
-    type CommitMessage =
-        {
-            Type: string
-            Scope: string option
-            Description: string
-            BreakingChange: bool
-        }
-
     let private firstLineRegex =
         Regex("^(?<type>[^\(:]+)(\(?<scope>.+?\))?(?<breakingChange>!)?: (?<description>.{1,})$")
 
@@ -48,7 +40,11 @@ This is the footer of the commit message
     // by checking the SkipTagLine property of the type
     let private tagLineRegex = Regex("^(\[(?<tag>[^\]]+)\])+$")
 
-    let internal validateFirstLine (config: Config) (line: string) =
+    let internal validateFirstLine
+        (config: CommitParserConfig)
+        (line: string)
+        : Result<FirstLineParsedResult, string>
+        =
         let m = firstLineRegex.Match(line)
 
         let generateErrorMessage () =
@@ -139,7 +135,11 @@ feat: add new feature
 
 -------------------------"
 
-    let internal validateTagLine (config: Config) (commitMessage: CommitMessage) (line: string) =
+    let internal validateTagLine
+        (config: CommitParserConfig)
+        (commitMessage: FirstLineParsedResult)
+        (line: string)
+        =
         let typeConfigOpt =
             config.Types
             |> List.tryFind (fun currentType -> currentType.Name = commitMessage.Type)
@@ -174,7 +174,7 @@ feat: add new feature
 [tag1][tag2]
 -------------------------"
 
-    let validateCommitMessage (config: Config) (commit: string) =
+    let tryParseCommitMessage (config: CommitParserConfig) (commit: string) =
         let lines = commit.Replace("\r\n", "\n").Split('\n') |> Array.toList
 
         let validate firstLine secondLine tagLine lineAfterTagLine =
@@ -183,6 +183,15 @@ feat: add new feature
                 do! validateSecondLine secondLine
                 let! tags = validateTagLine config commitMessage tagLine
                 do! validateLineAfterTagLine lineAfterTagLine tags
+
+                return
+                    {
+                        Type = commitMessage.Type
+                        Scope = commitMessage.Scope
+                        Description = commitMessage.Description
+                        BreakingChange = commitMessage.BreakingChange
+                        Tags = tags
+                    }
             }
 
         match lines with
@@ -196,3 +205,8 @@ feat: add new feature
         | commit :: secondLine :: tagLine :: lineAfterTagLine :: _ ->
             validate commit secondLine tagLine lineAfterTagLine
         | _ -> Error invalidCommitMessage
+
+    let tryValidateCommitMessage (config: CommitParserConfig) (commit: string) =
+        tryParseCommitMessage config commit
+        // Discard the parsed result
+        |> Result.bind (fun _ -> Ok())

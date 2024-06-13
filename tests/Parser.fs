@@ -2,9 +2,10 @@
 
 open Expecto
 open Expecto.NoMessage
-open CommitLinter
+open EasyBuild.CommitParser
+open EasyBuild.CommitParser.Types
 
-let private opiniatedTagsConfig: Config.Config =
+let private opiniatedTagsConfig: CommitParserConfig =
     {
         Types =
             [
@@ -72,11 +73,12 @@ let tests =
                                 Description = "<description>"
                                 BreakingChange = false
                             }
-                            : Parser.CommitMessage)
+                            : FirstLineParsedResult)
                             |> Ok
 
                         let actual =
-                            "feat: <description>" |> Parser.validateFirstLine Config.defaultConfig
+                            "feat: <description>"
+                            |> Parser.validateFirstLine CommitParserConfig.Default
 
                         Expect.equal actual expected
                     }
@@ -89,11 +91,12 @@ let tests =
                                 Description = "<description>"
                                 BreakingChange = false
                             }
-                            : Parser.CommitMessage)
+                            : FirstLineParsedResult)
                             |> Ok
 
                         let actual =
-                            "fix: <description>" |> Parser.validateFirstLine Config.defaultConfig
+                            "fix: <description>"
+                            |> Parser.validateFirstLine CommitParserConfig.Default
 
                         Expect.equal actual expected
                     }
@@ -106,11 +109,12 @@ let tests =
                                 Description = "<description>"
                                 BreakingChange = false
                             }
-                            : Parser.CommitMessage)
+                            : FirstLineParsedResult)
                             |> Ok
 
                         let actual =
-                            "ci: <description>" |> Parser.validateFirstLine Config.defaultConfig
+                            "ci: <description>"
+                            |> Parser.validateFirstLine CommitParserConfig.Default
 
                         Expect.equal actual expected
                     }
@@ -123,11 +127,12 @@ let tests =
                                 Description = "<description>"
                                 BreakingChange = false
                             }
-                            : Parser.CommitMessage)
+                            : FirstLineParsedResult)
                             |> Ok
 
                         let actual =
-                            "chore: <description>" |> Parser.validateFirstLine Config.defaultConfig
+                            "chore: <description>"
+                            |> Parser.validateFirstLine CommitParserConfig.Default
 
                         Expect.equal actual expected
                     }
@@ -140,11 +145,12 @@ let tests =
                                 Description = "<description>"
                                 BreakingChange = false
                             }
-                            : Parser.CommitMessage)
+                            : FirstLineParsedResult)
                             |> Ok
 
                         let actual =
-                            "docs: <description>" |> Parser.validateFirstLine Config.defaultConfig
+                            "docs: <description>"
+                            |> Parser.validateFirstLine CommitParserConfig.Default
 
                         Expect.equal actual expected
                     }
@@ -157,11 +163,12 @@ let tests =
                                 Description = "<description>"
                                 BreakingChange = false
                             }
-                            : Parser.CommitMessage)
+                            : FirstLineParsedResult)
                             |> Ok
 
                         let actual =
-                            "test: <description>" |> Parser.validateFirstLine Config.defaultConfig
+                            "test: <description>"
+                            |> Parser.validateFirstLine CommitParserConfig.Default
 
                         Expect.equal actual expected
                     }
@@ -174,11 +181,12 @@ let tests =
                                 Description = "<description>"
                                 BreakingChange = false
                             }
-                            : Parser.CommitMessage)
+                            : FirstLineParsedResult)
                             |> Ok
 
                         let actual =
-                            "style: <description>" |> Parser.validateFirstLine Config.defaultConfig
+                            "style: <description>"
+                            |> Parser.validateFirstLine CommitParserConfig.Default
 
                         Expect.equal actual expected
                     }
@@ -191,12 +199,12 @@ let tests =
                                 Description = "<description>"
                                 BreakingChange = false
                             }
-                            : Parser.CommitMessage)
+                            : FirstLineParsedResult)
                             |> Ok
 
                         let actual =
                             "refactor: <description>"
-                            |> Parser.validateFirstLine Config.defaultConfig
+                            |> Parser.validateFirstLine CommitParserConfig.Default
 
                         Expect.equal actual expected
                     }
@@ -226,7 +234,7 @@ feat: some description
 
                         let actual =
                             "invalid: <description>"
-                            |> Parser.validateFirstLine Config.defaultConfig
+                            |> Parser.validateFirstLine CommitParserConfig.Default
 
                         Expect.equal actual expected
                     }
@@ -268,7 +276,7 @@ feat: add new feature
                 "validateTagLine"
                 [
                     test "works with an empty line if the type is flagged as 'SkipTagLine'" {
-                        let commitMessage: Parser.CommitMessage =
+                        let commitMessage: FirstLineParsedResult =
                             {
                                 Type = "feat"
                                 Scope = None
@@ -278,13 +286,14 @@ feat: add new feature
 
                         let expected = None |> Ok
 
-                        let actual = "" |> Parser.validateTagLine Config.defaultConfig commitMessage
+                        let actual =
+                            "" |> Parser.validateTagLine CommitParserConfig.Default commitMessage
 
                         Expect.equal actual expected
                     }
 
                     test "return the tag if the type is flagged as 'SkipTagLine'" {
-                        let commitMessage: Parser.CommitMessage =
+                        let commitMessage: FirstLineParsedResult =
                             {
                                 Type = "feat"
                                 Scope = None
@@ -296,13 +305,13 @@ feat: add new feature
 
                         let actual =
                             "[converter]"
-                            |> Parser.validateTagLine Config.defaultConfig commitMessage
+                            |> Parser.validateTagLine CommitParserConfig.Default commitMessage
 
                         Expect.equal actual expected
                     }
 
                     test "return the list of tags if the type is flagged as 'SkipTagLine'" {
-                        let commitMessage: Parser.CommitMessage =
+                        let commitMessage: FirstLineParsedResult =
                             {
                                 Type = "feat"
                                 Scope = None
@@ -314,13 +323,13 @@ feat: add new feature
 
                         let actual =
                             "[converter][web]"
-                            |> Parser.validateTagLine Config.defaultConfig commitMessage
+                            |> Parser.validateTagLine CommitParserConfig.Default commitMessage
 
                         Expect.equal actual expected
                     }
 
                     test "return an error if the type is not flagged as 'SkipTagLine'" {
-                        let commitMessage: Parser.CommitMessage =
+                        let commitMessage: FirstLineParsedResult =
                             {
                                 Type = "feat"
                                 Scope = None
@@ -348,7 +357,7 @@ feat: add new feature
 
                     test
                         "return an error if tag line is in an invalid format and the type is not flagged as 'SkipTagLine'" {
-                        let commitMessage: Parser.CommitMessage =
+                        let commitMessage: FirstLineParsedResult =
                             {
                                 Type = "feat"
                                 Scope = None
@@ -378,12 +387,12 @@ feat: add new feature
                 ]
 
             testList
-                "validateCommitMessage"
+                "tryValidateCommitMessage"
                 [
                     test "works for short commit message only" {
                         let actual =
                             "feat: add new feature"
-                            |> Parser.validateCommitMessage Config.defaultConfig
+                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
                         Expect.equal actual (Ok())
                     }
@@ -393,7 +402,7 @@ feat: add new feature
                             "feat: add new feature
 
 [converter]"
-                            |> Parser.validateCommitMessage Config.defaultConfig
+                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
                         Expect.equal actual (Ok())
                     }
@@ -405,7 +414,7 @@ feat: add new feature
 [converter]
 
 This is the body message"
-                            |> Parser.validateCommitMessage Config.defaultConfig
+                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
                         Expect.equal actual (Ok())
                     }
@@ -416,7 +425,7 @@ This is the body message"
 
 This is the body message"
 
-                            |> Parser.validateCommitMessage Config.defaultConfig
+                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
                         Expect.equal actual (Ok())
                     }
@@ -439,7 +448,7 @@ feat: add new feature
                             "feat: add new feature
 This is the body message"
 
-                            |> Parser.validateCommitMessage Config.defaultConfig
+                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
                         Expect.equal actual expected
                     }
@@ -462,7 +471,7 @@ feat: add new feature
                             "feat: add new feature
 [converter]"
 
-                            |> Parser.validateCommitMessage Config.defaultConfig
+                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
                         Expect.equal actual expected
                     }
@@ -488,7 +497,7 @@ feat: add new feature
 [converter]
 This is the body message"
 
-                            |> Parser.validateCommitMessage Config.defaultConfig
+                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
                         Expect.equal actual expected
                     }
