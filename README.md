@@ -1,55 +1,63 @@
 # EasyBuild.Parser
 
 
-[![NuGet](https://img.shields.io/nuget/v/EasyBuild.CommitLinter.svg)](https://www.nuget.org/packages/EasyBuild.CommitLinter)
+[![NuGet](https://img.shields.io/nuget/v/EasyBuild.CommitParser.svg)](https://www.nuget.org/packages/EasyBuild.CommitParser)
 [![](https://img.shields.io/badge/Sponsors-EA4AAA)](https://mangelmaxime.github.io/sponsors/)
 
-EasyBuild.CommitLinter is a .NET tool to lint your commit messages. It checks if the commit message follows the [commit format described below](#commit-format).
-
-> [!TIP]
-> EasyBuild.CommitLinter has a companion tool called [EasyBuild.ChangelogGen](https://github.com/easybuild-org/EasyBuild.ChangelogGen) which generates a changelog based on the Git history.
+Common commit parser library used by other EasyBuild tools like [EasyBuild.ChangelogGen](https://github.com/easybuild-org/EasyBuild.ChangelogGen) or [EasyBuild.CommitLinter](https://github.com/easybuild-org/EasyBuild.CommitLinter).
 
 ## Usage
 
-```bash
-# Install the tool
-dotnet tool install EasyBuild.CommitLinter
+```fs
+open EasyBuild.CommitParser
+open EasyBuild.CommitParser.Types
 
-# Run the tool
-dotnet commit-linter --help
+let commitText = "..."
+
+// If you need the commit message information
+Parser.tryParseCommitMessage CommitParserConfig.Default commitText
+// > it: Result<CommitMessage,string>
+
+// If you just want to validate the commit message
+Parser.tryValidateCommitMessage CommitParserConfig.Default commitText
+// > it: Result<unit,string>
 ```
 
-```text
-DESCRIPTION:
-Lint your commit message based on EasyBuild.CommitLinter conventions
+For the configuration, you can use the default configuration or provide a custom one.
 
-Learn more at https://github.com/easybuild-org/EasyBuild.CommitLinter
+```fs
+open EasyBuild.CommitParser.Types
 
-USAGE:
-    commit-linter <commit-file> [OPTIONS]
+// Default configuration
+CommitParserConfig.Default
 
-ARGUMENTS:
-    <commit-file>    Path to the commit message file
+// My custom configuration
+{
+    Types =
+        [
+            // ...
+        ]
+    Tags =
+        [
+            // ...
+        ] |> Some
+}
 
-OPTIONS:
-    -h, --help       Prints help information
-    -v, --version    Prints version information
-    -c, --config     Path to the configuration file
-```
+// You can also use a configuration file by passing the JSON content to the included Decoder
+open Thoth.Json.Newtonsoft
 
-### Husky Integration
+let configurationJson = "..."
 
-If you are using [Husky](https://alirezanet.github.io/Husky.Net/), you can register the CLI as a `commit-msg` hook to validate your commit messages by running:
-
-```bash
-dotnet husky add commit-msg -c 'dotnet commit-linter "$1"'
-# $1 is provided by Husky and contains the path to the commit message file
+match Decode.fromString Config.Config.decoder configContent with
+| Ok config -> config
+| Error error ->
+    failwithf "Error while parsing the configuration file: %s" error
 ```
 
 ## Commit Format
 
 > [!NOTE]
-> EasyBuild.CommitLinter format is based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and extends it to work in a monorepo environment.
+> EasyBuild.CommitParser format is based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) and extends it to work in a monorepo environment.
 
 ```text
 <type>[optional scope][optional !]: <description>
@@ -89,7 +97,7 @@ dotnet husky add commit-msg -c 'dotnet commit-linter "$1"'
 
 ## Configuration
 
-EasyBuild.CommitLinter comes with a default configuration to validate your commit.
+EasyBuild.CommitParser comes with a default configuration to validate your commit.
 
 The default configuration allows the following commit types with no tags required:
 
@@ -102,7 +110,7 @@ The default configuration allows the following commit types with no tags require
 - `style` - Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 - `refactor` - A code change that neither fixes a bug nor adds a feature
 
-If needed, you can provide a custom configuration file by using the `--config` option.
+If needed, you can provide a custom configuration either by code directly or by using a configuration file using JSON format.
 
 ### Configuration File Format
 

@@ -7,7 +7,7 @@ open System
 
 module Parser =
 
-    let internal invalidCommitMessage =
+    let private invalidCommitMessage =
         "Invalid commit message format.
 
 Expected a commit message with the following format:
