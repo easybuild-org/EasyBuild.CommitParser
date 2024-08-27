@@ -15,7 +15,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="FsToolkit.ErrorHandling" />
         <PackageReference Include="Thoth.Json.Newtonsoft" />
     </ItemGroup>
 

@@ -48,7 +48,7 @@ open Thoth.Json.Newtonsoft
 
 let configurationJson = "..."
 
-match Decode.fromString Config.Config.decoder configContent with
+match Decode.fromString CommitParserConfig.decoder configContent with
 | Ok config -> config
 | Error error ->
     failwithf "Error while parsing the configuration file: %s" error

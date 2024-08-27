@@ -1,26 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="Expecto.Extensions.fs" />
-    <Compile Include="Workspace.fs" />
-    <Compile Include="Parser.fs" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Include="Workspace.fs" />
+        <Compile Include="Expect.fs" />
+        <Compile Include="Setup.fs" />
+        <Compile Include="Parser.fs" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="EasyBuild.FileSystemProvider" />
-    <PackageReference Include="Expecto" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="SimpleExec" />
-    <PackageReference Include="YoloDev.Expecto.TestSdk" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="EasyBuild.FileSystemProvider" />
+        <PackageReference Include="Fixie.TestAdapter" />
+        <PackageReference Update="FSharp.Core" VersionOverride="8.0.301" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\src\EasyBuild.CommitParser.fsproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\src\EasyBuild.CommitParser.fsproj" />
+    </ItemGroup>
 
 </Project>

@@ -1,9 +1,9 @@
-﻿module Parser
+﻿module Tests.Parser
 
-open Expecto
-open Expecto.NoMessage
+open Tests.Setup
 open EasyBuild.CommitParser
 open EasyBuild.CommitParser.Types
+open System.Threading.Tasks
 
 let private opiniatedTagsConfig: CommitParserConfig =
     {
@@ -57,161 +57,148 @@ let private opiniatedTagsConfig: CommitParserConfig =
         Tags = None
     }
 
-[<Tests>]
-let tests =
-    testList
-        "Parser"
-        [
-            testList
-                "validateFirstLine"
-                [
-                    test "works for 'feat' type with default config" {
-                        let expected =
-                            ({
-                                Type = "feat"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
-                            : FirstLineParsedResult)
-                            |> Ok
+module ValidateFirstLine =
 
-                        let actual =
-                            "feat: <description>"
-                            |> Parser.validateFirstLine CommitParserConfig.Default
+    [<Test>]
+    let ``works for 'feat' type with default config`` () =
+        let expected =
+            ({
+                Type = "feat"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
 
-                        Expect.equal actual expected
-                    }
+        let actual =
+            "feat: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
 
-                    test "works for 'fix' type with default config" {
-                        let expected =
-                            ({
-                                Type = "fix"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
-                            : FirstLineParsedResult)
-                            |> Ok
+        Expect.equal actual expected
 
-                        let actual =
-                            "fix: <description>"
-                            |> Parser.validateFirstLine CommitParserConfig.Default
+    [<Test>]
+    let ``works for 'fix' type with default config`` () =
+        let expected =
+            ({
+                Type = "fix"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
 
-                        Expect.equal actual expected
-                    }
+        let actual =
+            "fix: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
 
-                    test "works for 'ci' type with default config" {
-                        let expected =
-                            ({
-                                Type = "ci"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
-                            : FirstLineParsedResult)
-                            |> Ok
+        Expect.equal actual expected
 
-                        let actual =
-                            "ci: <description>"
-                            |> Parser.validateFirstLine CommitParserConfig.Default
+    [<Test>]
+    let ``works for 'ci' type with default config`` () =
+        let expected =
+            ({
+                Type = "ci"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
 
-                        Expect.equal actual expected
-                    }
+        let actual =
+            "ci: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
 
-                    test "works for 'chore' type with default config" {
-                        let expected =
-                            ({
-                                Type = "chore"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
-                            : FirstLineParsedResult)
-                            |> Ok
+        Expect.equal actual expected
 
-                        let actual =
-                            "chore: <description>"
-                            |> Parser.validateFirstLine CommitParserConfig.Default
+    [<Test>]
+    let ``works for 'chore' type with default config`` () =
+        let expected =
+            ({
+                Type = "chore"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
 
-                        Expect.equal actual expected
-                    }
+        let actual =
+            "chore: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
 
-                    test "works for 'docs' type with default config" {
-                        let expected =
-                            ({
-                                Type = "docs"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
-                            : FirstLineParsedResult)
-                            |> Ok
+        Expect.equal actual expected
 
-                        let actual =
-                            "docs: <description>"
-                            |> Parser.validateFirstLine CommitParserConfig.Default
+    [<Test>]
+    let ``works for 'docs' type with default config`` () =
+        let expected =
+            ({
+                Type = "docs"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
 
-                        Expect.equal actual expected
-                    }
+        let actual =
+            "docs: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
 
-                    test "works for 'test' type with default config" {
-                        let expected =
-                            ({
-                                Type = "test"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
-                            : FirstLineParsedResult)
-                            |> Ok
+        Expect.equal actual expected
 
-                        let actual =
-                            "test: <description>"
-                            |> Parser.validateFirstLine CommitParserConfig.Default
+    [<Test>]
+    let ``works for 'test' type with default config`` () =
+        let expected =
+            ({
+                Type = "test"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
 
-                        Expect.equal actual expected
-                    }
+        let actual =
+            "test: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
 
-                    test "works for 'style' type with default config" {
-                        let expected =
-                            ({
-                                Type = "style"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
-                            : FirstLineParsedResult)
-                            |> Ok
+        Expect.equal actual expected
 
-                        let actual =
-                            "style: <description>"
-                            |> Parser.validateFirstLine CommitParserConfig.Default
+    [<Test>]
+    let ``works for 'style' type with default config`` () =
+        let expected =
+            ({
+                Type = "style"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
 
-                        Expect.equal actual expected
-                    }
+        let actual =
+            "style: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
 
-                    test "works for 'refactor' type with default config" {
-                        let expected =
-                            ({
-                                Type = "refactor"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
-                            : FirstLineParsedResult)
-                            |> Ok
+        Expect.equal actual expected
 
-                        let actual =
-                            "refactor: <description>"
-                            |> Parser.validateFirstLine CommitParserConfig.Default
+    [<Test>]
+    let ``works for 'refactor' type with default config`` () =
+        let expected =
+            ({
+                Type = "refactor"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
 
-                        Expect.equal actual expected
-                    }
+        let actual =
+            "refactor: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
 
-                    test "works for 'invalid' type with default config" {
-                        let expected =
-                            "Invalid commit message format.
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``works for 'invalid' type with default config`` () =
+        let expected =
+            "Invalid commit message format.
 
 Expected a commit message with the following format: '<type>[optional scope]: <description>'.
 
@@ -230,31 +217,27 @@ Example:
 -------------------------
 feat: some description
 -------------------------"
-                            |> Error
+            |> Error
 
-                        let actual =
-                            "invalid: <description>"
-                            |> Parser.validateFirstLine CommitParserConfig.Default
+        let actual =
+            "invalid: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
 
-                        Expect.equal actual expected
-                    }
+        Expect.equal actual expected
 
-                ]
+module ValidateSecondLine =
 
-            testList
-                "validateSecondLine"
-                [
-                    test "should works for empty line" {
-                        let expected = Ok()
+    [<Test>]
+    let ``should works for empty line"`` () =
+        let expected = Ok()
 
-                        let actual = "" |> Parser.validateSecondLine
+        let actual = "" |> Parser.validateSecondLine
 
-                        Expect.equal actual expected
-                    }
+        Expect.equal actual expected
 
-                    test "should fail for non-empty line" {
-                        let expected =
-                            "Invalid commit message format.
+    [<Test>]
+    let ``should fail for non-empty line"`` () =
+        let expected =
+            "Invalid commit message format.
 
 Expected an empty line after the commit message.
 
@@ -264,82 +247,78 @@ feat: add new feature
 
 -------------------------"
 
-                            |> Error
+            |> Error
 
-                        let actual = "non empty line" |> Parser.validateSecondLine
+        let actual = "non empty line" |> Parser.validateSecondLine
 
-                        Expect.equal actual expected
-                    }
-                ]
+        Expect.equal actual expected
 
-            testList
-                "validateTagLine"
-                [
-                    test "works with an empty line if the type is flagged as 'SkipTagLine'" {
-                        let commitMessage: FirstLineParsedResult =
-                            {
-                                Type = "feat"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
+module ValidateTagLine =
 
-                        let expected = None |> Ok
+    [<Test>]
+    let ``works with an empty line if the type is flagged as 'SkipTagLine'"`` () =
+        let commitMessage: FirstLineParsedResult =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
 
-                        let actual =
-                            "" |> Parser.validateTagLine CommitParserConfig.Default commitMessage
+        let expected = None |> Ok
 
-                        Expect.equal actual expected
-                    }
+        let actual = "" |> Parser.validateTagLine CommitParserConfig.Default commitMessage
 
-                    test "return the tag if the type is flagged as 'SkipTagLine'" {
-                        let commitMessage: FirstLineParsedResult =
-                            {
-                                Type = "feat"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
+        Expect.equal actual expected
 
-                        let expected = [ "converter" ] |> Some |> Ok
+    [<Test>]
+    let ``return the tag if the type is flagged as 'SkipTagLine'"`` () =
+        let commitMessage: FirstLineParsedResult =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
 
-                        let actual =
-                            "[converter]"
-                            |> Parser.validateTagLine CommitParserConfig.Default commitMessage
+        let expected = [ "converter" ] |> Some |> Ok
 
-                        Expect.equal actual expected
-                    }
+        let actual =
+            "[converter]" |> Parser.validateTagLine CommitParserConfig.Default commitMessage
 
-                    test "return the list of tags if the type is flagged as 'SkipTagLine'" {
-                        let commitMessage: FirstLineParsedResult =
-                            {
-                                Type = "feat"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
+        Expect.equal actual expected
 
-                        let expected = [ "converter"; "web" ] |> Some |> Ok
+    [<Test>]
+    let ``return the list of tags if the type is flagged as 'SkipTagLine'"`` () =
+        let commitMessage: FirstLineParsedResult =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
 
-                        let actual =
-                            "[converter][web]"
-                            |> Parser.validateTagLine CommitParserConfig.Default commitMessage
+        let expected = [ "converter"; "web" ] |> Some |> Ok
 
-                        Expect.equal actual expected
-                    }
+        let actual =
+            "[converter][web]"
+            |> Parser.validateTagLine CommitParserConfig.Default commitMessage
 
-                    test "return an error if the type is not flagged as 'SkipTagLine'" {
-                        let commitMessage: FirstLineParsedResult =
-                            {
-                                Type = "feat"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
+        Expect.equal actual expected
 
-                        let expected =
-                            Error
-                                "Invalid commit message format.
+    [<Test>]
+    let ``return an error if the type is not flagged as 'SkipTagLine'"`` () =
+        let commitMessage: FirstLineParsedResult =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+
+        let expected =
+            Error
+                "Invalid commit message format.
 
 Expected a tag line with the following format: '[tag1][tag2]...[tagN]'
 
@@ -350,24 +329,25 @@ feat: add new feature
 [tag1][tag2]
 -------------------------"
 
-                        let actual = "" |> Parser.validateTagLine opiniatedTagsConfig commitMessage
+        let actual = "" |> Parser.validateTagLine opiniatedTagsConfig commitMessage
 
-                        Expect.equal actual expected
-                    }
+        Expect.equal actual expected
 
-                    test
-                        "return an error if tag line is in an invalid format and the type is not flagged as 'SkipTagLine'" {
-                        let commitMessage: FirstLineParsedResult =
-                            {
-                                Type = "feat"
-                                Scope = None
-                                Description = "<description>"
-                                BreakingChange = false
-                            }
+    [<Test>]
+    let ``return an error if tag line is in an invalid format and the type is not flagged as 'SkipTagLine'``
+        ()
+        =
+        let commitMessage: FirstLineParsedResult =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
 
-                        let expected =
-                            Error
-                                "Invalid commit message format.
+        let expected =
+            Error
+                "Invalid commit message format.
 
 Expected a tag line with the following format: '[tag1][tag2]...[tagN]'
 
@@ -378,62 +358,58 @@ feat: add new feature
 [tag1][tag2]
 -------------------------"
 
-                        let actual =
-                            "invalid tag line"
-                            |> Parser.validateTagLine opiniatedTagsConfig commitMessage
+        let actual =
+            "invalid tag line" |> Parser.validateTagLine opiniatedTagsConfig commitMessage
 
-                        Expect.equal actual expected
-                    }
-                ]
+        Expect.equal actual expected
 
-            testList
-                "tryValidateCommitMessage"
-                [
-                    test "works for short commit message only" {
-                        let actual =
-                            "feat: add new feature"
-                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
+module TryValidateCommitMessage =
 
-                        Expect.equal actual (Ok())
-                    }
+    [<Test>]
+    let ``works for short commit message only`` () =
+        let actual =
+            "feat: add new feature"
+            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
-                    test "works for commit message / tag line" {
-                        let actual =
-                            "feat: add new feature
+        Expect.equal actual (Ok())
+
+    [<Test>]
+    let ``works for commit message / tag line`` () =
+        let actual =
+            "feat: add new feature
 
 [converter]"
-                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
+            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
-                        Expect.equal actual (Ok())
-                    }
+        Expect.equal actual (Ok())
 
-                    test "works for commit message / tag line / body message" {
-                        let actual =
-                            "feat: add new feature
+    [<Test>]
+    let ``works for commit message / tag line / body message`` () =
+        let actual =
+            "feat: add new feature
 
 [converter]
 
 This is the body message"
-                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
+            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
-                        Expect.equal actual (Ok())
-                    }
+        Expect.equal actual (Ok())
 
-                    test "works for commit message / body message if tag line is not required" {
-                        let actual =
-                            "feat: add new feature
+    [<Test>]
+    let ``works for commit message / body message if tag line is not required`` () =
+        let actual =
+            "feat: add new feature
 
 This is the body message"
 
-                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
+            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
-                        Expect.equal actual (Ok())
-                    }
+        Expect.equal actual (Ok())
 
-                    test
-                        "returns an error if an empty line is missing between the commit message and body" {
-                        let expected =
-                            "Invalid commit message format.
+    [<Test>]
+    let ``returns an error if an empty line is missing between the commit message and body`` () =
+        let expected =
+            "Invalid commit message format.
 
 Expected an empty line after the commit message.
 
@@ -442,21 +418,22 @@ Example:
 feat: add new feature
 
 -------------------------"
-                            |> Error
+            |> Error
 
-                        let actual =
-                            "feat: add new feature
+        let actual =
+            "feat: add new feature
 This is the body message"
 
-                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
+            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
-                        Expect.equal actual expected
-                    }
+        Expect.equal actual expected
 
-                    test
-                        "returns an error if an empty line is missing between the commit message and tag line" {
-                        let expected =
-                            "Invalid commit message format.
+    [<Test>]
+    let ``returns an error if an empty line is missing between the commit message and tag line``
+        ()
+        =
+        let expected =
+            "Invalid commit message format.
 
 Expected an empty line after the commit message.
 
@@ -465,20 +442,20 @@ Example:
 feat: add new feature
 
 -------------------------"
-                            |> Error
+            |> Error
 
-                        let actual =
-                            "feat: add new feature
+        let actual =
+            "feat: add new feature
 [converter]"
 
-                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
+            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
-                        Expect.equal actual expected
-                    }
+        Expect.equal actual expected
 
-                    test "returns an error if an empty line is missing after the tag line and body" {
-                        let expected =
-                            "Invalid commit message format.
+    [<Test>]
+    let ``returns an error if an empty line is missing after the tag line and body`` () =
+        let expected =
+            "Invalid commit message format.
 
 Expected an empty line after the tag line.
 
@@ -489,18 +466,14 @@ feat: add new feature
 [tag1][tag2]
 
 -------------------------"
-                            |> Error
+            |> Error
 
-                        let actual =
-                            "feat: add new feature
+        let actual =
+            "feat: add new feature
 
 [converter]
 This is the body message"
 
-                            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
+            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
-                        Expect.equal actual expected
-                    }
-
-                ]
-        ]
+        Expect.equal actual expected
