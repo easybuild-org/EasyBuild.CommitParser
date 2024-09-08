@@ -31,7 +31,7 @@ This is the footer of the commit message
 -------------------------"
 
     let private firstLineRegex =
-        Regex("^(?<type>[^\(:]+)(\(?<scope>.+?\))?(?<breakingChange>!)?: (?<description>.{1,})$")
+        Regex("^(?<type>[^(!:]+)(\((?<scope>.+)\))?(?<breakingChange>!)?: (?<description>.{1,})$")
 
     // Matches one or more tags
     // We want the regex to fail if there are no tags

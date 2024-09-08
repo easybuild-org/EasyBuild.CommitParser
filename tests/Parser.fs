@@ -196,7 +196,91 @@ module ValidateFirstLine =
         Expect.equal actual expected
 
     [<Test>]
-    let ``works for 'invalid' type with default config`` () =
+    let ``supports `!` for indicating a breaking change`` () =
+        let expected =
+            ({
+                Type = "feat"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = true
+            }
+            : FirstLineParsedResult)
+            |> Ok
+
+        let actual =
+            "feat!: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``supports `!` for indicating a breaking change with a scope`` () =
+        let expected =
+            ({
+                Type = "feat"
+                Scope = Some "scope"
+                Description = "<description>"
+                BreakingChange = true
+            }
+            : FirstLineParsedResult)
+            |> Ok
+
+        let actual =
+            "feat(scope)!: <description>"
+            |> Parser.validateFirstLine CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``support providing a scope`` () =
+        let expected =
+            ({
+                Type = "feat"
+                Scope = Some "scope"
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
+
+        let actual =
+            "feat(scope): <description>"
+            |> Parser.validateFirstLine CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``fails if the scope is empty`` () =
+        let expected =
+            "Invalid commit message format.
+
+Expected a commit message with the following format: '<type>[optional scope]: <description>'.
+
+Where <type> is one of the following:
+
+- feat: A new feature
+- fix: A bug fix
+- ci: Changes to CI/CD configuration
+- chore: Changes to the build process or auxiliary tools and libraries such as documentation generation
+- docs: Documentation changes
+- test: Adding missing tests or correcting existing tests
+- style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+- refactor: A code change that neither fixes a bug nor adds a feature
+
+Example:
+-------------------------
+feat: some description
+-------------------------"
+            |> Error
+
+        let actual =
+            "feat(): <description>" |> Parser.validateFirstLine CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``reject invalid message format and generate help test based on the provided configuration``
+        ()
+        =
         let expected =
             "Invalid commit message format.
 
