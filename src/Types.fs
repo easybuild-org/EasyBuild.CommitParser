@@ -15,6 +15,7 @@ type CommitMessage =
         Type: string
         Scope: string option
         Description: string
+        Body: string
         BreakingChange: bool
         Tags: string list option
     }

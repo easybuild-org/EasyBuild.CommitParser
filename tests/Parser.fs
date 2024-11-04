@@ -580,7 +580,7 @@ feat: add new feature
         let expected =
             "Invalid commit message format.
 
-Expected an empty line after the tag line.
+Expected an empty line after the tag line when adding a body or a footer.
 
 Example:
 -------------------------
@@ -588,6 +588,8 @@ feat: add new feature
 
 [tag1][tag2]
 
+This is the body of the commit message
+with a second line
 -------------------------"
             |> Error
 
@@ -598,5 +600,91 @@ feat: add new feature
 This is the body message"
 
             |> Parser.tryValidateCommitMessage CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+module TryParseCommitMessage =
+
+    [<Test>]
+    let ``works for short commit message only`` () =
+        let expected =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "add new feature"
+                Body = ""
+                BreakingChange = false
+                Tags = None
+            }
+            |> Ok
+
+        let actual =
+            "feat: add new feature"
+            |> Parser.tryParseCommitMessage CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``works for commit message / tag line`` () =
+        let expected =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "add new feature"
+                Body = ""
+                BreakingChange = false
+                Tags = Some [ "converter" ]
+            }
+            |> Ok
+
+        let actual =
+            "feat: add new feature
+
+[converter]"
+            |> Parser.tryParseCommitMessage CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``works for commit message / tag line / body message`` () =
+        let expected =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "add new feature"
+                Body = "This is the body message"
+                BreakingChange = false
+                Tags = Some [ "converter" ]
+            }
+            |> Ok
+
+        let actual =
+            "feat: add new feature
+
+[converter]
+
+This is the body message"
+            |> Parser.tryParseCommitMessage CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``works for commit message / body message if tag line is not required`` () =
+        let expected =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "add new feature"
+                Body = "This is the body message"
+                BreakingChange = false
+                Tags = None
+            }
+            |> Ok
+
+        let actual =
+            "feat: add new feature
+
+This is the body message"
+            |> Parser.tryParseCommitMessage CommitParserConfig.Default
 
         Expect.equal actual expected

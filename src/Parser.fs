@@ -115,17 +115,15 @@ feat: add new feature
 
 -------------------------"
 
-    let internal validateLineAfterTagLine (line: string) (tags: string list option) =
-        match tags with
-        | None -> Ok()
-        | Some _ ->
-            if String.IsNullOrWhiteSpace line then
-                Ok()
-            else
-                Error
-                    "Invalid commit message format.
+    let internal validateLinesAfterTagLine
+        (previousLine: string)
+        (lines: string list)
+        (tags: string list option)
+        =
+        let errorMessage =
+            "Invalid commit message format.
 
-Expected an empty line after the tag line.
+Expected an empty line after the tag line when adding a body or a footer.
 
 Example:
 -------------------------
@@ -133,7 +131,22 @@ feat: add new feature
 
 [tag1][tag2]
 
+This is the body of the commit message
+with a second line
 -------------------------"
+
+        match tags with
+        | None ->
+            // If there are no tags, the previous line is considered as part of the body
+            previousLine :: lines |> String.concat "\n" |> Ok
+        | Some _ ->
+            match lines with
+            | [] -> Ok ""
+            | firstLine :: rest ->
+                if String.IsNullOrWhiteSpace firstLine then
+                    rest |> String.concat "\n" |> Ok
+                else
+                    Error errorMessage
 
     let internal validateTagLine
         (config: CommitParserConfig)
@@ -191,26 +204,34 @@ feat: add new feature
     let tryParseCommitMessage (config: CommitParserConfig) (commit: string) =
         let lines = commit.Replace("\r\n", "\n").Split('\n') |> Array.toList
 
-        let validate firstLine secondLine tagLine lineAfterTagLine =
+        let validate firstLine secondLine tagLine (linesAfterTagLine: string list) =
             result {
                 let! firstLine = validateFirstLine config firstLine
                 let! _ = validateSecondLine secondLine
                 let! tags = validateTagLine config firstLine tagLine
-                let! _ = validateLineAfterTagLine lineAfterTagLine tags
+                let! bodyOrFooter = validateLinesAfterTagLine tagLine linesAfterTagLine tags
 
-                return ()
+                return
+                    {
+                        Type = firstLine.Type
+                        Scope = firstLine.Scope
+                        Description = firstLine.Description
+                        Body = bodyOrFooter
+                        BreakingChange = firstLine.BreakingChange
+                        Tags = tags
+                    }
             }
 
         match lines with
         // short commit message
         // Give it a chance to be valid, if the type allows it
-        | commit :: [] -> validate commit "" "" ""
-        | commit :: secondLine :: [] -> validate commit secondLine "" ""
+        | commit :: [] -> validate commit "" "" []
+        | commit :: secondLine :: [] -> validate commit secondLine "" []
         // short commit message + tag line
-        | commit :: secondLine :: tagLine :: [] -> validate commit secondLine tagLine ""
+        | commit :: secondLine :: tagLine :: [] -> validate commit secondLine tagLine []
         // short commit message + tag line + body description / footer
-        | commit :: secondLine :: tagLine :: lineAfterTagLine :: _ ->
-            validate commit secondLine tagLine lineAfterTagLine
+        | commit :: secondLine :: tagLine :: linesAfterTagLine ->
+            validate commit secondLine tagLine linesAfterTagLine
         | _ -> Error invalidCommitMessage
 
     let tryValidateCommitMessage (config: CommitParserConfig) (commit: string) =
