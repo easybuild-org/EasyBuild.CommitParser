@@ -1,3 +1,0 @@
-feat: Add a new feature
-
-This is the body of the commit message

@@ -1,3 +1,0 @@
-feat: Add a new feature
-
-[cli]
