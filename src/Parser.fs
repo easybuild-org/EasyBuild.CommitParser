@@ -162,11 +162,25 @@ feat: add new feature
             else if typeConfig.SkipTagLine then
                 Ok None
             else
+                let helpText =
+                    match config.Tags with
+                    | Some tags ->
+                        let expectedTagsText =
+                            tags |> List.map (fun tag -> $"- {tag}") |> String.concat "\n"
+
+                        $"
+Where tag is one of the following:
+
+%s{expectedTagsText}
+"
+
+                    | None -> ""
+
                 Error
-                    "Invalid commit message format.
+                    $"Invalid commit message format.
 
 Expected a tag line with the following format: '[tag1][tag2]...[tagN]'
-
+%s{helpText}
 Example:
 -------------------------
 feat: add new feature
@@ -186,19 +200,6 @@ feat: add new feature
 
                 return ()
             }
-                        validateLineAfterTagLine lineAfterTagLine tags
-                        |> Result.map (fun _ ->
-                            {
-                                Type = commitMessage.Type
-                                Scope = commitMessage.Scope
-                                Description = commitMessage.Description
-                                BreakingChange = commitMessage.BreakingChange
-                                Tags = tags
-                            }
-                        )
-                    )
-                )
-            )
 
         match lines with
         // short commit message

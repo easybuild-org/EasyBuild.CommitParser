@@ -57,6 +57,11 @@ let private opiniatedTagsConfig: CommitParserConfig =
         Tags = None
     }
 
+let private opiniatedTagsConfigWithTagList =
+    { opiniatedTagsConfig with
+        Tags = Some [ "converter"; "web" ]
+    }
+
 module ValidateFirstLine =
 
     [<Test>]
@@ -444,6 +449,40 @@ feat: add new feature
 
         let actual =
             "invalid tag line" |> Parser.validateTagLine opiniatedTagsConfig commitMessage
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``if tags are provided, return an error containing a proposition of tags`` () =
+        let commitMessage: FirstLineParsedResult =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+
+        let expected =
+            Error
+                "Invalid commit message format.
+
+Expected a tag line with the following format: '[tag1][tag2]...[tagN]'
+
+Where tag is one of the following:
+
+- converter
+- web
+
+Example:
+-------------------------
+feat: add new feature
+
+[tag1][tag2]
+-------------------------"
+
+        let actual =
+            "invalid tag line"
+            |> Parser.validateTagLine opiniatedTagsConfigWithTagList commitMessage
 
         Expect.equal actual expected
 

@@ -99,8 +99,18 @@
       "easybuild.commitparser": {
         "type": "Project",
         "dependencies": {
-          "FSharp.Core": "[5.0.2, )",
+          "FSharp.Core": "[7.0.300, )",
+          "FsToolkit.ErrorHandling": "[4.18.0, )",
           "Thoth.Json.Newtonsoft": "[0.1.0, )"
+        }
+      },
+      "FsToolkit.ErrorHandling": {
+        "type": "CentralTransitive",
+        "requested": "[4.18.0, )",
+        "resolved": "4.18.0",
+        "contentHash": "cGtOP6lWcnLcXiLTGZLHi+8JAyuUDjGhZOmJWnZfd5aPCUIyL+DqUIwmfEGkUk3j/gpcchLDk9BNwUTc1oM30w==",
+        "dependencies": {
+          "FSharp.Core": "7.0.300"
         }
       },
       "Thoth.Json.Newtonsoft": {
