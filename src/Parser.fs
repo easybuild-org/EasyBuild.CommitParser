@@ -3,6 +3,7 @@ namespace EasyBuild.CommitParser
 open EasyBuild.CommitParser.Types
 open System.Text.RegularExpressions
 open System
+open FsToolkit.ErrorHandling
 
 module Parser =
 
@@ -177,14 +178,14 @@ feat: add new feature
         let lines = commit.Replace("\r\n", "\n").Split('\n') |> Array.toList
 
         let validate firstLine secondLine tagLine lineAfterTagLine =
-            // Could be rewritten with FsToolkit.ErrorHandling result CE
-            // but it forces to upgrade FSharp.Core to 7.0.300
-            validateFirstLine config firstLine
-            |> Result.bind (fun commitMessage ->
-                validateSecondLine secondLine
-                |> Result.bind (fun _ ->
-                    validateTagLine config commitMessage tagLine
-                    |> Result.bind (fun tags ->
+            result {
+                let! firstLine = validateFirstLine config firstLine
+                let! _ = validateSecondLine secondLine
+                let! tags = validateTagLine config firstLine tagLine
+                let! _ = validateLineAfterTagLine lineAfterTagLine tags
+
+                return ()
+            }
                         validateLineAfterTagLine lineAfterTagLine tags
                         |> Result.map (fun _ ->
                             {
