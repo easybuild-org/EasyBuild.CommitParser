@@ -69,13 +69,13 @@ match Decode.fromString CommitParserConfig.decoder configContent with
 [optional footer]
 ```
 
--   `[optional tags]` format is as follows:
+- `[optional tags]` format is as follows:
 
     ```text
     [tag1][tag2][tag3]
     ```
 
--   `[optional body]` is a free-form text.
+- `[optional body]` is a free-form text.
 
     ```text
     This is a single line body.
@@ -87,7 +87,7 @@ match Decode.fromString CommitParserConfig.decoder configContent with
     multi-line body.
     ```
 
--   `[optional footer]` follows [git trailer format](https://git-scm.com/docs/git-interpret-trailers)
+- `[optional footer]` follows [git trailer format](https://git-scm.com/docs/git-interpret-trailers)
 
     ```text
     BREAKING CHANGE: <description>
@@ -118,8 +118,8 @@ The configuration file is a JSON file with the following properties:
 
 #### types
 
--   Required: ✅
--   Type: `{ name: string, description?: string, skipTagLine?: bool } []`
+- Required: ✅
+- Type: `{ name: string, description?: string, skipTagLine?: bool } []`
 
 List of accepted commit types.
 
@@ -131,8 +131,8 @@ List of accepted commit types.
 
 #### tags
 
--   Required: ❌
--   Type: `string []`
+- Required: ❌
+- Type: `string []`
 
 List of accepted commit tags.
 
