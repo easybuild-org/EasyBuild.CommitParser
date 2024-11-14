@@ -5,8 +5,14 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- EasyBuild: START -->
-<!-- last_commit_released: eea6c0a2f69fe8655b6afc26810e86eeff12f49d -->
+<!-- last_commit_released: e9c41f40944bd756c1005ee6d708e52d8a556d7b -->
 <!-- EasyBuild: END -->
+
+## 2.0.0
+
+### 🚀 Features
+
+- Make the implementation aligned with Conventional Commits specification ([9c97eb5](https://github.com/easybuild-org/EasyBuild.CommitParser/commit/9c97eb5912fced651f37a1c45bda488e48b047fd))
 
 ## 1.2.0
 
