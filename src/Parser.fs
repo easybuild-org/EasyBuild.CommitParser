@@ -14,8 +14,6 @@ Expected a commit message with the following format:
 
 <type>[optional scope]: <description>
 
-[optional tag line]
-
 [optional body]
 
 [optional footer]
@@ -24,21 +22,19 @@ Example:
 -------------------------
 feat: add new feature
 
-[tag1][tag2]
-
 This is the body of the commit message
 
-This is the footer of the commit message
+Signed-off-by: John Doe <john.doe@mail.com>
+Refs #123
 -------------------------"
 
     let private firstLineRegex =
-        Regex("^(?<type>[^(!:]+)(\((?<scope>.+)\))?(?<breakingChange>!)?: (?<description>.{1,})$")
+        Regex("^(?<type>[^(!:]+)(\((?<scope>.+)\))?(?<breakingChange>!)?:\s*(?<description>.{1,})$")
 
-    // Matches one or more tags
-    // We want the regex to fail if there are no tags
-    // the validation will still be able to give a chance to the commit message to be valid
-    // by checking the SkipTagLine property of the type
-    let private tagLineRegex = Regex("^(\[(?<tag>[^\]]+)\])+$")
+    let private gitTailerRegex =
+        Regex(
+            "^((?<key_1>([A-Za-z0-9-]+|BREAKING CHANGE)):\s+(?<value_1>.*)|(?<key_2>[A-Za-z0-9-]+) (?<value_2>#.*))$"
+        )
 
     let internal validateFirstLine
         (config: CommitParserConfig)
@@ -100,138 +96,149 @@ Example:
         else
             generateErrorMessage () |> Error
 
-    let internal validateSecondLine (line: string) =
-        if String.IsNullOrWhiteSpace line then
-            Ok()
-        else
-            Error
-                "Invalid commit message format.
-
-Expected an empty line after the commit message.
-
-Example:
--------------------------
-feat: add new feature
-
--------------------------"
-
-    let internal validateLinesAfterTagLine
-        (previousLine: string)
-        (lines: string list)
-        (tags: string list option)
-        =
+    let internal validateRawBody (lines: string list) =
         let errorMessage =
             "Invalid commit message format.
 
-Expected an empty line after the tag line when adding a body or a footer.
+Expected an empty line after subject line.
 
 Example:
 -------------------------
 feat: add new feature
-
-[tag1][tag2]
 
 This is the body of the commit message
 with a second line
 -------------------------"
 
-        match tags with
-        | None ->
-            // If there are no tags, the previous line is considered as part of the body
-            previousLine :: lines |> String.concat "\n" |> Ok
-        | Some _ ->
-            match lines with
-            | [] -> Ok ""
-            | firstLine :: rest ->
-                if String.IsNullOrWhiteSpace firstLine then
-                    rest |> String.concat "\n" |> Ok
-                else
-                    Error errorMessage
+        match lines with
+        | [] -> Ok []
+        | firstLine :: rest ->
+            if String.IsNullOrWhiteSpace firstLine then
+                rest |> Ok
+            else
+                Error errorMessage
 
-    let internal validateTagLine
+    let internal validateBodyAndFooters
         (config: CommitParserConfig)
-        (commitMessage: FirstLineParsedResult)
-        (line: string)
+        (commitMessageType: string)
+        (rawBodyLines: string list)
         =
+
+        let footerLines = rawBodyLines |> List.rev |> List.takeWhile gitTailerRegex.IsMatch
+
+        let body =
+            rawBodyLines[0 .. (rawBodyLines.Length - footerLines.Length - 1)]
+            |> String.concat "\n"
+
+        let footer =
+            footerLines
+            |> List.map (fun line ->
+                let m = gitTailerRegex.Match(line)
+
+                if m.Groups.["key_1"].Success then
+                    (m.Groups.["key_1"].Value, m.Groups.["value_1"].Value)
+                elif m.Groups.["key_2"].Success then
+                    (m.Groups.["key_2"].Value, m.Groups.["value_2"].Value)
+                else
+                    failwith
+                        "Footer should have found a key of format 'key: <string value>' or 'key #<string value>'"
+            )
+            |> List.groupBy fst
+            |> List.map (fun (key, values) -> (key, values |> List.map snd))
+            |> Map.ofList
+
         let typeConfigOpt =
             config.Types
-            |> List.tryFind (fun currentType -> currentType.Name = commitMessage.Type)
+            |> List.tryFind (fun currentType -> currentType.Name = commitMessageType)
 
         match typeConfigOpt with
         | None ->
             // In theory, this should never happen because we already validated the type
             Error "Commit message type not found in the configuration."
-
         | Some typeConfig ->
-            let m = tagLineRegex.Match(line)
+            let expectedTagsList =
+                match config.Tags with
+                | Some tags -> tags |> List.map (fun tag -> $"- {tag}") |> String.concat "\n"
+                | None -> ""
 
-            if m.Success then
-                m.Groups["tag"].Captures
-                |> Seq.map (fun group -> group.Value)
-                |> Seq.toList
-                |> Some
-                |> Ok
-            // If the type is flagged as 'SkipTagLine', we can still consider the commit message as valid
-            else if typeConfig.SkipTagLine then
-                Ok None
+            // No validation needed if the tag footer is skipped
+            if typeConfig.SkipTagFooter then
+                Ok(body, footer)
             else
-                let helpText =
+                match Map.tryFind "Tag" footer with
+                | Some tagFooters ->
                     match config.Tags with
-                    | Some tags ->
-                        let expectedTagsText =
-                            tags |> List.map (fun tag -> $"- {tag}") |> String.concat "\n"
+                    | Some expectedTags ->
+                        if List.forall (fun x -> List.contains x tagFooters) expectedTags then
+                            Ok(body, footer)
+                        else
+                            let receivedTagsList =
+                                tagFooters |> List.map (fun tag -> $"- {tag}") |> String.concat "\n"
 
-                        $"
-Where tag is one of the following:
+                            Error
+                                $"Unkonwn tag(s) in the footer.
 
-%s{expectedTagsText}
-"
+Received:
 
-                    | None -> ""
+%s{receivedTagsList}
 
-                Error
-                    $"Invalid commit message format.
+But allowed tags are:
 
-Expected a tag line with the following format: '[tag1][tag2]...[tagN]'
-%s{helpText}
+%s{expectedTagsList}"
+                    | None -> Ok(body, footer)
+
+                | None ->
+                    let helpText =
+                        if expectedTagsList.Length > 0 then
+                            $"where tag is one of the following:
+
+%s{expectedTagsList}"
+                        else
+                            ""
+
+                    Error
+                        $"Invalid commit message format.
+
+Expected a 'Tag' footer %s{helpText}
+
 Example:
 -------------------------
 feat: add new feature
 
-[tag1][tag2]
+This is the body of the commit message
+
+Tag: converter
 -------------------------"
 
     let tryParseCommitMessage (config: CommitParserConfig) (commit: string) =
         let lines = commit.Replace("\r\n", "\n").Split('\n') |> Array.toList
 
-        let validate firstLine secondLine tagLine (linesAfterTagLine: string list) =
+        let validate firstLine (linesAfterSubjetLine: string list) =
             result {
                 let! firstLine = validateFirstLine config firstLine
-                let! _ = validateSecondLine secondLine
-                let! tags = validateTagLine config firstLine tagLine
-                let! bodyOrFooter = validateLinesAfterTagLine tagLine linesAfterTagLine tags
+                let! rawBody = validateRawBody linesAfterSubjetLine
+                let! (body, footers) = validateBodyAndFooters config firstLine.Type rawBody
 
                 return
                     {
                         Type = firstLine.Type
                         Scope = firstLine.Scope
                         Description = firstLine.Description
-                        Body = bodyOrFooter
-                        BreakingChange = firstLine.BreakingChange
-                        Tags = tags
+                        Body = body
+                        BreakingChange =
+                            firstLine.BreakingChange
+                            || footers.ContainsKey "BREAKING CHANGE"
+                            || footers.ContainsKey "BREAKING-CHANGE"
+                        Footers = footers
                     }
             }
 
         match lines with
         // short commit message
         // Give it a chance to be valid, if the type allows it
-        | commit :: [] -> validate commit "" "" []
-        | commit :: secondLine :: [] -> validate commit secondLine "" []
-        // short commit message + tag line
-        | commit :: secondLine :: tagLine :: [] -> validate commit secondLine tagLine []
-        // short commit message + tag line + body description / footer
-        | commit :: secondLine :: tagLine :: linesAfterTagLine ->
-            validate commit secondLine tagLine linesAfterTagLine
+        | subject :: [] -> validate subject []
+        // short commit message + body description / footer
+        | subject :: linesAfterSubject -> validate subject linesAfterSubject
         | _ -> Error invalidCommitMessage
 
     let tryValidateCommitMessage (config: CommitParserConfig) (commit: string) =

@@ -5,60 +5,60 @@ open EasyBuild.CommitParser
 open EasyBuild.CommitParser.Types
 open System.Threading.Tasks
 
-let private opiniatedTagsConfig: CommitParserConfig =
+let private opiniatedTypeConfig: CommitParserConfig =
     {
         Types =
             [
                 {
                     Name = "feat"
                     Description = Some "A new feature"
-                    SkipTagLine = false
+                    SkipTagFooter = false
                 }
                 {
                     Name = "fix"
                     Description = Some "A bug fix"
-                    SkipTagLine = false
+                    SkipTagFooter = false
                 }
                 {
                     Name = "ci"
                     Description = Some "Changes to CI/CD configuration"
-                    SkipTagLine = true
+                    SkipTagFooter = true
                 }
                 {
                     Name = "chore"
                     Description =
                         Some
                             "Changes to the build process or auxiliary tools and libraries such as documentation generation"
-                    SkipTagLine = true
+                    SkipTagFooter = true
                 }
                 {
                     Name = "docs"
                     Description = Some "Documentation changes"
-                    SkipTagLine = false
+                    SkipTagFooter = false
                 }
                 {
                     Name = "test"
                     Description = Some "Adding missing tests or correcting existing tests"
-                    SkipTagLine = false
+                    SkipTagFooter = false
                 }
                 {
                     Name = "style"
                     Description =
                         Some
                             "Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)"
-                    SkipTagLine = false
+                    SkipTagFooter = false
                 }
                 {
                     Name = "refactor"
                     Description = Some "A code change that neither fixes a bug nor adds a feature"
-                    SkipTagLine = false
+                    SkipTagFooter = false
                 }
             ]
         Tags = None
     }
 
-let private opiniatedTagsConfigWithTagList =
-    { opiniatedTagsConfig with
+let private opiniatedTypeConfigWithProjectList =
+    { opiniatedTypeConfig with
         Tags = Some [ "converter"; "web" ]
     }
 
@@ -201,6 +201,40 @@ module ValidateFirstLine =
         Expect.equal actual expected
 
     [<Test>]
+    let ``works for summary without space after colon`` () =
+        let expected =
+            ({
+                Type = "refactor"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
+
+        let actual =
+            "refactor:<description>" |> Parser.validateFirstLine CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``works for summary without multiple spaces after colon`` () =
+        let expected =
+            ({
+                Type = "refactor"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
+
+        let actual =
+            "refactor:<description>" |> Parser.validateFirstLine CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
     let ``supports `!` for indicating a breaking change`` () =
         let expected =
             ({
@@ -313,178 +347,242 @@ feat: some description
 
         Expect.equal actual expected
 
-module ValidateSecondLine =
-
     [<Test>]
-    let ``should works for empty line"`` () =
-        let expected = Ok()
-
-        let actual = "" |> Parser.validateSecondLine
-
-        Expect.equal actual expected
-
-    [<Test>]
-    let ``should fail for non-empty line"`` () =
+    let ``report an error is ':' is missing`` () =
         let expected =
             "Invalid commit message format.
 
-Expected an empty line after the commit message.
+Expected a commit message with the following format: '<type>[optional scope]: <description>'.
+
+Where <type> is one of the following:
+
+- feat: A new feature
+- fix: A bug fix
+- ci: Changes to CI/CD configuration
+- chore: Changes to the build process or auxiliary tools and libraries such as documentation generation
+- docs: Documentation changes
+- test: Adding missing tests or correcting existing tests
+- style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+- refactor: A code change that neither fixes a bug nor adds a feature
 
 Example:
 -------------------------
-feat: add new feature
-
+feat: some description
 -------------------------"
-
             |> Error
 
-        let actual = "non empty line" |> Parser.validateSecondLine
-
-        Expect.equal actual expected
-
-module ValidateTagLine =
-
-    [<Test>]
-    let ``works with an empty line if the type is flagged as 'SkipTagLine'"`` () =
-        let commitMessage: FirstLineParsedResult =
-            {
-                Type = "feat"
-                Scope = None
-                Description = "<description>"
-                BreakingChange = false
-            }
-
-        let expected = None |> Ok
-
-        let actual = "" |> Parser.validateTagLine CommitParserConfig.Default commitMessage
-
-        Expect.equal actual expected
-
-    [<Test>]
-    let ``return the tag if the type is flagged as 'SkipTagLine'"`` () =
-        let commitMessage: FirstLineParsedResult =
-            {
-                Type = "feat"
-                Scope = None
-                Description = "<description>"
-                BreakingChange = false
-            }
-
-        let expected = [ "converter" ] |> Some |> Ok
-
         let actual =
-            "[converter]" |> Parser.validateTagLine CommitParserConfig.Default commitMessage
+            "feat <description>" |> Parser.validateFirstLine CommitParserConfig.Default
 
         Expect.equal actual expected
 
+module ValidateBodyAndFooters =
+
     [<Test>]
-    let ``return the list of tags if the type is flagged as 'SkipTagLine'"`` () =
-        let commitMessage: FirstLineParsedResult =
-            {
-                Type = "feat"
-                Scope = None
-                Description = "<description>"
-                BreakingChange = false
-            }
-
-        let expected = [ "converter"; "web" ] |> Some |> Ok
-
+    let ``works for single line body message only`` () =
         let actual =
-            "[converter][web]"
-            |> Parser.validateTagLine CommitParserConfig.Default commitMessage
+            [ "This is the body message" ]
+            |> Parser.validateBodyAndFooters CommitParserConfig.Default "feat"
 
-        Expect.equal actual expected
-
-    [<Test>]
-    let ``return an error if the type is not flagged as 'SkipTagLine'"`` () =
-        let commitMessage: FirstLineParsedResult =
-            {
-                Type = "feat"
-                Scope = None
-                Description = "<description>"
-                BreakingChange = false
-            }
-
-        let expected =
-            Error
-                "Invalid commit message format.
-
-Expected a tag line with the following format: '[tag1][tag2]...[tagN]'
-
-Example:
--------------------------
-feat: add new feature
-
-[tag1][tag2]
--------------------------"
-
-        let actual = "" |> Parser.validateTagLine opiniatedTagsConfig commitMessage
-
-        Expect.equal actual expected
+        match actual with
+        | Ok(actualBody, actualFooters) ->
+            Expect.equal actualBody "This is the body message"
+            Expect.equal actualFooters Map.empty
+        | _ -> failwith "Expected Ok"
 
     [<Test>]
-    let ``return an error if tag line is in an invalid format and the type is not flagged as 'SkipTagLine'``
-        ()
-        =
-        let commitMessage: FirstLineParsedResult =
-            {
-                Type = "feat"
-                Scope = None
-                Description = "<description>"
-                BreakingChange = false
-            }
-
-        let expected =
-            Error
-                "Invalid commit message format.
-
-Expected a tag line with the following format: '[tag1][tag2]...[tagN]'
-
-Example:
--------------------------
-feat: add new feature
-
-[tag1][tag2]
--------------------------"
-
+    let ``works for multi-line body message only`` () =
         let actual =
-            "invalid tag line" |> Parser.validateTagLine opiniatedTagsConfig commitMessage
+            [
+                "This is the body message"
+                "with a second line"
+                ""
+                "This is another paragraph"
+            ]
+            |> Parser.validateBodyAndFooters CommitParserConfig.Default "feat"
 
-        Expect.equal actual expected
+        match actual with
+        | Ok(actualBody, actualFooters) ->
+            Expect.equal
+                actualBody
+                """This is the body message
+with a second line
+
+This is another paragraph"""
+
+            Expect.equal actualFooters Map.empty
+        | _ -> failwith "Expected Ok"
 
     [<Test>]
-    let ``if tags are provided, return an error containing a proposition of tags`` () =
-        let commitMessage: FirstLineParsedResult =
-            {
-                Type = "feat"
-                Scope = None
-                Description = "<description>"
-                BreakingChange = false
-            }
+    let ``works for single line body message and footer`` () =
+        let actual =
+            [ "This is the body message"; ""; "Project: converter"; "Issue #123" ]
+            |> Parser.validateBodyAndFooters CommitParserConfig.Default "feat"
 
+        let expectedFooters =
+            [ "Issue", [ "#123" ]; "Project", [ "converter" ] ] |> Map.ofList
+
+        match actual with
+        | Ok(actualBody, actualFooters) ->
+            Expect.equal actualBody "This is the body message\n"
+
+            Expect.equal actualFooters expectedFooters
+        | _ -> failwith "Expected Ok"
+
+    [<Test>]
+    let ``works for multi-line body message and footer`` () =
+        let actual =
+            [
+                "This is the body message"
+                "with a second line"
+                ""
+                "This is another paragraph"
+                ""
+                "Project: converter"
+                "Issue #123"
+            ]
+            |> Parser.validateBodyAndFooters CommitParserConfig.Default "feat"
+
+        let expectedFooters =
+            [ "Issue", [ "#123" ]; "Project", [ "converter" ] ] |> Map.ofList
+
+        match actual with
+        | Ok(actualBody, actualFooters) ->
+            Expect.equal
+                actualBody
+                """This is the body message
+with a second line
+
+This is another paragraph
+"""
+
+            Expect.equal actualFooters expectedFooters
+        | _ -> failwith "Expected Ok"
+
+    [<Test>]
+    let ``works for multi-line body message and footer with multiple values`` () =
+        let actual =
+            [
+                "This is the body message"
+                "with a second line"
+                ""
+                "This is another paragraph"
+                ""
+                "Project: converter"
+                "Project: web"
+                "Issue: #123"
+            ]
+            |> Parser.validateBodyAndFooters CommitParserConfig.Default "feat"
+
+        let expectedFooters =
+            [ "Project", [ "web"; "converter" ]; "Issue", [ "#123" ] ] |> Map.ofList
+
+        match actual with
+        | Ok(actualBody, actualFooters) ->
+            Expect.equal
+                actualBody
+                """This is the body message
+with a second line
+
+This is another paragraph
+"""
+
+            Expect.equal actualFooters expectedFooters
+        | _ -> failwith "Expected Ok"
+
+    [<Test>]
+    let ``only known tags are allowed`` () =
         let expected =
-            Error
-                "Invalid commit message format.
+            "Unkonwn tag(s) in the footer.
 
-Expected a tag line with the following format: '[tag1][tag2]...[tagN]'
+Received:
 
-Where tag is one of the following:
+- some-tag
+
+But allowed tags are:
 
 - converter
-- web
-
-Example:
--------------------------
-feat: add new feature
-
-[tag1][tag2]
--------------------------"
+- web"
+            |> Error
 
         let actual =
-            "invalid tag line"
-            |> Parser.validateTagLine opiniatedTagsConfigWithTagList commitMessage
+            [
+                "This is the body message"
+                "with a second line"
+                ""
+                "This is another paragraph"
+                ""
+                "Tag: some-tag"
+            ]
+            |> Parser.validateBodyAndFooters opiniatedTypeConfigWithProjectList "feat"
 
         Expect.equal actual expected
+
+    [<Test>]
+    let ``report an error if one of the tags is unkonwn`` () =
+        let expected =
+            "Unkonwn tag(s) in the footer.
+
+Received:
+
+- converter
+- some-tag
+
+But allowed tags are:
+
+- converter
+- web"
+            |> Error
+
+        let actual =
+            [
+                "This is the body message"
+                "with a second line"
+                ""
+                "This is another paragraph"
+                ""
+                "Tag: some-tag"
+                "Tag: converter"
+            ]
+            |> Parser.validateBodyAndFooters opiniatedTypeConfigWithProjectList "feat"
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``works if all tags are known`` () =
+        let actual =
+            [ "This is the body message"; ""; "Tag: converter"; "Tag: web" ]
+            |> Parser.validateBodyAndFooters opiniatedTypeConfigWithProjectList "feat"
+
+        let expectedFooters = [ "Tag", [ "web"; "converter" ] ] |> Map.ofList
+
+        match actual with
+        | Ok(actualBody, actualFooters) ->
+            Expect.equal
+                actualBody
+                """This is the body message
+"""
+
+            Expect.equal actualFooters expectedFooters
+        | _ -> failwith "Expected Ok"
+
+    [<Test>]
+    let ``work of hashed footer`` () =
+        let actual =
+            [ "This is the body message"; ""; "Refs #123" ]
+            |> Parser.validateBodyAndFooters CommitParserConfig.Default "feat"
+
+        let expectedFooters = [ "Refs", [ "#123" ] ] |> Map.ofList
+
+        match actual with
+        | Ok(actualBody, actualFooters) ->
+            Expect.equal
+                actualBody
+                """This is the body message
+"""
+
+            Expect.equal actualFooters expectedFooters
+        | _ -> failwith "Expected Ok"
 
 module TryValidateCommitMessage =
 
@@ -534,59 +632,11 @@ This is the body message"
         let expected =
             "Invalid commit message format.
 
-Expected an empty line after the commit message.
+Expected an empty line after subject line.
 
 Example:
 -------------------------
 feat: add new feature
-
--------------------------"
-            |> Error
-
-        let actual =
-            "feat: add new feature
-This is the body message"
-
-            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
-
-        Expect.equal actual expected
-
-    [<Test>]
-    let ``returns an error if an empty line is missing between the commit message and tag line``
-        ()
-        =
-        let expected =
-            "Invalid commit message format.
-
-Expected an empty line after the commit message.
-
-Example:
--------------------------
-feat: add new feature
-
--------------------------"
-            |> Error
-
-        let actual =
-            "feat: add new feature
-[converter]"
-
-            |> Parser.tryValidateCommitMessage CommitParserConfig.Default
-
-        Expect.equal actual expected
-
-    [<Test>]
-    let ``returns an error if an empty line is missing after the tag line and body`` () =
-        let expected =
-            "Invalid commit message format.
-
-Expected an empty line after the tag line when adding a body or a footer.
-
-Example:
--------------------------
-feat: add new feature
-
-[tag1][tag2]
 
 This is the body of the commit message
 with a second line
@@ -595,8 +645,6 @@ with a second line
 
         let actual =
             "feat: add new feature
-
-[converter]
 This is the body message"
 
             |> Parser.tryValidateCommitMessage CommitParserConfig.Default
@@ -614,7 +662,7 @@ module TryParseCommitMessage =
                 Description = "add new feature"
                 Body = ""
                 BreakingChange = false
-                Tags = None
+                Footers = Map.empty
             }
             |> Ok
 
@@ -625,7 +673,7 @@ module TryParseCommitMessage =
         Expect.equal actual expected
 
     [<Test>]
-    let ``works for commit message / tag line`` () =
+    let ``works for commit message / footer`` () =
         let expected =
             {
                 Type = "feat"
@@ -633,40 +681,40 @@ module TryParseCommitMessage =
                 Description = "add new feature"
                 Body = ""
                 BreakingChange = false
-                Tags = Some [ "converter" ]
+                Footers = Map.ofList [ "Project", [ "converter" ] ]
             }
             |> Ok
 
         let actual =
             "feat: add new feature
 
-[converter]"
+Project: converter"
             |> Parser.tryParseCommitMessage CommitParserConfig.Default
 
         Expect.equal actual expected
 
-    [<Test>]
-    let ``works for commit message / tag line / body message`` () =
-        let expected =
-            {
-                Type = "feat"
-                Scope = None
-                Description = "add new feature"
-                Body = "This is the body message"
-                BreakingChange = false
-                Tags = Some [ "converter" ]
-            }
-            |> Ok
+    //     [<Test>]
+    //     let ``works for commit message / tag line / body message`` () =
+    //         let expected =
+    //             {
+    //                 Type = "feat"
+    //                 Scope = None
+    //                 Description = "add new feature"
+    //                 Body = "This is the body message"
+    //                 BreakingChange = false
+    //                 Tags = Some [ "converter" ]
+    //             }
+    //             |> Ok
 
-        let actual =
-            "feat: add new feature
+    //         let actual =
+    //             "feat: add new feature
 
-[converter]
+    // [converter]
 
-This is the body message"
-            |> Parser.tryParseCommitMessage CommitParserConfig.Default
+    // This is the body message"
+    //             |> Parser.tryParseCommitMessage CommitParserConfig.Default
 
-        Expect.equal actual expected
+    //         Expect.equal actual expected
 
     [<Test>]
     let ``works for commit message / body message if tag line is not required`` () =
@@ -677,7 +725,7 @@ This is the body message"
                 Description = "add new feature"
                 Body = "This is the body message"
                 BreakingChange = false
-                Tags = None
+                Footers = Map.empty
             }
             |> Ok
 
@@ -685,6 +733,49 @@ This is the body message"
             "feat: add new feature
 
 This is the body message"
+            |> Parser.tryParseCommitMessage CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``footer 'BREAKING CHANGE' is detected as a breaking change`` () =
+        let expected =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "add new feature"
+                Body = ""
+                BreakingChange = true
+                Footers = Map.ofList [ "BREAKING CHANGE", [ "this is change is breaking" ] ]
+            }
+            |> Ok
+
+        let actual =
+            "feat: add new feature
+
+BREAKING CHANGE: this is change is breaking"
+
+            |> Parser.tryParseCommitMessage CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``footer 'BREAKING-CHANGE' is detected as a breaking change`` () =
+        let expected =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "add new feature"
+                Body = ""
+                BreakingChange = true
+                Footers = Map.ofList [ "BREAKING-CHANGE", [ "this is change is breaking" ] ]
+            }
+            |> Ok
+
+        let actual =
+            "feat: add new feature
+
+BREAKING-CHANGE: this is change is breaking"
             |> Parser.tryParseCommitMessage CommitParserConfig.Default
 
         Expect.equal actual expected
