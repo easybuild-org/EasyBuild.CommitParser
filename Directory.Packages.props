@@ -4,6 +4,10 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="BlackFox.CommandLine" Version="1.0.0" />
+    <PackageVersion Include="DotNet.ReproducibleBuilds" Version="1.2.25">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageVersion>
     <PackageVersion Include="EasyBuild.FileSystemProvider" Version="0.3.0" />
     <PackageVersion Include="Fixie.TestAdapter" Version="3.4.0" />
     <PackageVersion Include="FSharp.Core" Version="7.0.300" />
