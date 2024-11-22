@@ -595,23 +595,23 @@ module TryValidateCommitMessage =
         Expect.equal actual (Ok())
 
     [<Test>]
-    let ``works for commit message / tag line`` () =
+    let ``works for commit message / tag footer`` () =
         let actual =
             "feat: add new feature
 
-[converter]"
+Tag: converter"
             |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
         Expect.equal actual (Ok())
 
     [<Test>]
-    let ``works for commit message / tag line / body message`` () =
+    let ``works for commit message / body message / tag footer`` () =
         let actual =
             "feat: add new feature
 
-[converter]
+This is the body message
 
-This is the body message"
+Tag: converter"
             |> Parser.tryValidateCommitMessage CommitParserConfig.Default
 
         Expect.equal actual (Ok())
@@ -693,28 +693,30 @@ Project: converter"
 
         Expect.equal actual expected
 
-    //     [<Test>]
-    //     let ``works for commit message / tag line / body message`` () =
-    //         let expected =
-    //             {
-    //                 Type = "feat"
-    //                 Scope = None
-    //                 Description = "add new feature"
-    //                 Body = "This is the body message"
-    //                 BreakingChange = false
-    //                 Tags = Some [ "converter" ]
-    //             }
-    //             |> Ok
+    [<Test>]
+    let ``works for commit message / tag line / body message`` () =
+        let expected =
+            {
+                Type = "feat"
+                Scope = None
+                Description = "add new feature"
+                Body =
+                    "This is the body message
+"
+                BreakingChange = false
+                Footers = Map.ofList [ "Tag", [ "converter" ] ]
+            }
+            |> Ok
 
-    //         let actual =
-    //             "feat: add new feature
+        let actual =
+            "feat: add new feature
 
-    // [converter]
+This is the body message
 
-    // This is the body message"
-    //             |> Parser.tryParseCommitMessage CommitParserConfig.Default
+Tag: converter"
+            |> Parser.tryParseCommitMessage CommitParserConfig.Default
 
-    //         Expect.equal actual expected
+        Expect.equal actual expected
 
     [<Test>]
     let ``works for commit message / body message if tag line is not required`` () =
