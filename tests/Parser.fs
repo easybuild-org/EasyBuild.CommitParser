@@ -576,6 +576,28 @@ But allowed tags are:
             Expect.equal actualFooters expectedFooters
         | _ -> failwith "Expected Ok"
 
+    [<Test>]
+    let ``work for footer with comment at the end`` () =
+        let actual =
+            [
+                "This is the body message"
+                ""
+                "# This is a comment"
+                "Refs #123"
+                "#Another comment"
+                "# Yet another comment"
+            ]
+            |> Parser.validateBodyAndFooters CommitParserConfig.Default "feat"
+
+        let expectedFooters = [ "Refs", [ "#123" ] ] |> Map.ofList
+
+        match actual with
+        | Ok(actualBody, actualFooters) ->
+            Expect.equal actualBody "This is the body message"
+
+            Expect.equal actualFooters expectedFooters
+        | _ -> failwith "Expected Ok"
+
 module TryValidateCommitMessage =
 
     [<Test>]

@@ -128,9 +128,9 @@ with a second line
             rawBodyLines
             |> List.rev
             |> List.takeWhile (fun line ->
-                // Last lines can be empty, so we take them into account
-                // They will be removed later
-                String.IsNullOrEmpty line || gitTailerRegex.IsMatch line
+                // Lines after the footer can be empty or a comment
+                // We still capture them here, so we can retrieve the correct body
+                String.IsNullOrEmpty line || gitTailerRegex.IsMatch line || line.StartsWith("#")
             )
 
         let body =
