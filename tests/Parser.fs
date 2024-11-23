@@ -424,7 +424,7 @@ This is another paragraph"""
 
         match actual with
         | Ok(actualBody, actualFooters) ->
-            Expect.equal actualBody "This is the body message\n"
+            Expect.equal actualBody "This is the body message"
 
             Expect.equal actualFooters expectedFooters
         | _ -> failwith "Expected Ok"
@@ -453,8 +453,7 @@ This is another paragraph"""
                 """This is the body message
 with a second line
 
-This is another paragraph
-"""
+This is another paragraph"""
 
             Expect.equal actualFooters expectedFooters
         | _ -> failwith "Expected Ok"
@@ -484,8 +483,7 @@ This is another paragraph
                 """This is the body message
 with a second line
 
-This is another paragraph
-"""
+This is another paragraph"""
 
             Expect.equal actualFooters expectedFooters
         | _ -> failwith "Expected Ok"
@@ -558,10 +556,7 @@ But allowed tags are:
 
         match actual with
         | Ok(actualBody, actualFooters) ->
-            Expect.equal
-                actualBody
-                """This is the body message
-"""
+            Expect.equal actualBody "This is the body message"
 
             Expect.equal actualFooters expectedFooters
         | _ -> failwith "Expected Ok"
@@ -576,10 +571,7 @@ But allowed tags are:
 
         match actual with
         | Ok(actualBody, actualFooters) ->
-            Expect.equal
-                actualBody
-                """This is the body message
-"""
+            Expect.equal actualBody "This is the body message"
 
             Expect.equal actualFooters expectedFooters
         | _ -> failwith "Expected Ok"
@@ -601,6 +593,24 @@ module TryValidateCommitMessage =
 
 Tag: converter"
             |> Parser.tryValidateCommitMessage CommitParserConfig.Default
+
+        Expect.equal actual (Ok())
+
+    [<Test>]
+    let ``works for commit message / tag footer with a config requiring the footer`` () =
+        let actual =
+            "feat: add new feature\n\nThis is the body message\n\nTag: converter\n"
+            |> Parser.tryValidateCommitMessage opiniatedTypeConfigWithProjectList
+
+        Expect.equal actual (Ok())
+
+    [<Test>]
+    let ``works for commit message / tag footer with a config requiring the footer and without trailing new line``
+        ()
+        =
+        let actual =
+            "feat: add new feature\n\nThis is the body message\n\nTag: converter"
+            |> Parser.tryValidateCommitMessage opiniatedTypeConfigWithProjectList
 
         Expect.equal actual (Ok())
 
@@ -700,9 +710,7 @@ Project: converter"
                 Type = "feat"
                 Scope = None
                 Description = "add new feature"
-                Body =
-                    "This is the body message
-"
+                Body = "This is the body message"
                 BreakingChange = false
                 Footers = Map.ofList [ "Tag", [ "converter" ] ]
             }

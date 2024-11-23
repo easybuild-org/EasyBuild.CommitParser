@@ -124,7 +124,14 @@ with a second line
         (rawBodyLines: string list)
         =
 
-        let footerLines = rawBodyLines |> List.rev |> List.takeWhile gitTailerRegex.IsMatch
+        let footerLines =
+            rawBodyLines
+            |> List.rev
+            |> List.takeWhile (fun line ->
+                // Last lines can be empty, so we take them into account
+                // They will be removed later
+                String.IsNullOrEmpty line || gitTailerRegex.IsMatch line
+            )
 
         let body =
             rawBodyLines[0 .. (rawBodyLines.Length - footerLines.Length - 1)]
@@ -132,16 +139,15 @@ with a second line
 
         let footer =
             footerLines
-            |> List.map (fun line ->
+            |> List.choose (fun line ->
                 let m = gitTailerRegex.Match(line)
 
                 if m.Groups.["key_1"].Success then
-                    (m.Groups.["key_1"].Value, m.Groups.["value_1"].Value)
+                    Some(m.Groups.["key_1"].Value, m.Groups.["value_1"].Value)
                 elif m.Groups.["key_2"].Success then
-                    (m.Groups.["key_2"].Value, m.Groups.["value_2"].Value)
+                    Some(m.Groups.["key_2"].Value, m.Groups.["value_2"].Value)
                 else
-                    failwith
-                        "Footer should have found a key of format 'key: <string value>' or 'key #<string value>'"
+                    None
             )
             |> List.groupBy fst
             |> List.map (fun (key, values) -> (key, values |> List.map snd))
@@ -169,7 +175,7 @@ with a second line
                 | Some tagFooters ->
                     match config.Tags with
                     | Some expectedTags ->
-                        if List.forall (fun x -> List.contains x tagFooters) expectedTags then
+                        if List.forall (fun x -> List.contains x expectedTags) tagFooters then
                             Ok(body, footer)
                         else
                             let receivedTagsList =

@@ -9,6 +9,10 @@ open System.Reflection
 type TestAttribute() =
     inherit Attribute()
 
+[<AttributeUsage(AttributeTargets.Method)>]
+type FocusTestAttribute() =
+    inherit Attribute()
+
 type TestModuleDiscovery() =
     interface IDiscovery with
         member this.TestClasses(concreteClasses: IEnumerable<Type>) =
