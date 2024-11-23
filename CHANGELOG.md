@@ -5,8 +5,14 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- EasyBuild: START -->
-<!-- last_commit_released: 890cb3b73046e4ff38101b05e04d2647a0ee9908 -->
+<!-- last_commit_released: ca7a733951f6c728beb7d177637f187f843d57a5 -->
 <!-- EasyBuild: END -->
+
+## 2.1.1
+
+### 🐞 Bug Fixes
+
+- Make the footer parser work when body has trailing new lines ([ca7a733](https://github.com/easybuild-org/EasyBuild.CommitParser/commit/ca7a733951f6c728beb7d177637f187f843d57a5))
 
 ## 2.1.0
 
