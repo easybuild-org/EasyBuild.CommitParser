@@ -5,8 +5,14 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- EasyBuild: START -->
-<!-- last_commit_released: ca7a733951f6c728beb7d177637f187f843d57a5 -->
+<!-- last_commit_released: 6684bb1ef7f86e30dfb1e73adf1416791feb955d -->
 <!-- EasyBuild: END -->
+
+## 2.2.0
+
+### 🚀 Features
+
+- Skip lines starting with `#` when at the end of the body or footer ([6684bb1](https://github.com/easybuild-org/EasyBuild.CommitParser/commit/6684bb1ef7f86e30dfb1e73adf1416791feb955d))
 
 ## 2.1.1
 
