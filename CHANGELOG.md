@@ -5,8 +5,16 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- EasyBuild: START -->
-<!-- last_commit_released: 6684bb1ef7f86e30dfb1e73adf1416791feb955d -->
+<!-- last_commit_released: 58be601e5c49d31bace4ff8626d001f5d214619b -->
 <!-- EasyBuild: END -->
+
+## 3.0.0 - 2024-12-02
+
+### 🏗️ Breaking changes
+
+* Add `perf`, `revert` and `build` commit type to be on par with Angular convention (most common one) ([b77b4c5](https://github.com/easybuild-org/EasyBuild.CommitParser/commit/b77b4c54584108ec5d0dd9f77bfe5767dce203c8))
+
+<strong><small>[View changes on Github](https://github.com/easybuild-org/EasyBuild.CommitParser/compare/6684bb1ef7f86e30dfb1e73adf1416791feb955d..58be601e5c49d31bace4ff8626d001f5d214619b)</small></strong>
 
 ## 2.2.0
 
