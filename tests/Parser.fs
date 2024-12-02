@@ -201,6 +201,57 @@ module ValidateFirstLine =
         Expect.equal actual expected
 
     [<Test>]
+    let ``works for 'perf' type with default config`` () =
+        let expected =
+            ({
+                Type = "perf"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
+
+        let actual =
+            "perf: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``works for 'revert' type with default config`` () =
+        let expected =
+            ({
+                Type = "revert"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
+
+        let actual =
+            "revert: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
+    let ``works for 'build' type with default config`` () =
+        let expected =
+            ({
+                Type = "build"
+                Scope = None
+                Description = "<description>"
+                BreakingChange = false
+            }
+            : FirstLineParsedResult)
+            |> Ok
+
+        let actual =
+            "build: <description>" |> Parser.validateFirstLine CommitParserConfig.Default
+
+        Expect.equal actual expected
+
+    [<Test>]
     let ``works for summary without space after colon`` () =
         let expected =
             ({
@@ -304,6 +355,9 @@ Where <type> is one of the following:
 - test: Adding missing tests or correcting existing tests
 - style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 - refactor: A code change that neither fixes a bug nor adds a feature
+- perf: A code change that improves performance
+- revert: Reverts a previous commit
+- build: Changes that affect the build system or external dependencies
 
 Example:
 -------------------------
@@ -335,6 +389,9 @@ Where <type> is one of the following:
 - test: Adding missing tests or correcting existing tests
 - style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 - refactor: A code change that neither fixes a bug nor adds a feature
+- perf: A code change that improves performance
+- revert: Reverts a previous commit
+- build: Changes that affect the build system or external dependencies
 
 Example:
 -------------------------
@@ -364,6 +421,9 @@ Where <type> is one of the following:
 - test: Adding missing tests or correcting existing tests
 - style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
 - refactor: A code change that neither fixes a bug nor adds a feature
+- perf: A code change that improves performance
+- revert: Reverts a previous commit
+- build: Changes that affect the build system or external dependencies
 
 Example:
 -------------------------

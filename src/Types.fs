@@ -94,6 +94,22 @@ type CommitParserConfig =
                             Some "A code change that neither fixes a bug nor adds a feature"
                         SkipTagFooter = true
                     }
+                    {
+                        Name = "perf"
+                        Description = Some "A code change that improves performance"
+                        SkipTagFooter = true
+                    }
+                    {
+                        Name = "revert"
+                        Description = Some "Reverts a previous commit"
+                        SkipTagFooter = true
+                    }
+                    {
+                        Name = "build"
+                        Description =
+                            Some "Changes that affect the build system or external dependencies"
+                        SkipTagFooter = true
+                    }
                 ]
             Tags = None
         }
